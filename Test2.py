@@ -11,7 +11,7 @@ with open(classFile, 'rt') as f:
 configPath = 'ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
 weightsPath = 'frozen_inference_graph.pb'
 
-thres = 0.5  # Threshold to detect object
+thres = 0.45 # Threshold to detect object
 CLASS_IDS = {
     'person': 1,
     'bag': 27
