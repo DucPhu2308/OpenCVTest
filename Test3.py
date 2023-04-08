@@ -71,26 +71,23 @@ while True:
                     Persons.append(Person(id, box))
         else:
              # tim nguoi ko con ton tai
+            new_persons = []
             for person in Persons:
                 for classId, confidence, box in detectResult:
                     if (classId == 1):
                         if isClose(box, person.box, 50):
                             person.box = box
                             match = True
+                            new_persons.append(person)
                             break
-                if not match:
-                    print(len(Persons))
-                    Persons.remove(person)
+                # if not match:
+                #     print(len(Persons))
+                #     Persons.remove(person)
                 match = False
+            Persons = new_persons
 
             # tim nguoi moi
             for classId, confidence, box in detectResult:
-                if (classId == 27 or classId == 31):  # backpack
-                    # print(person.backpackBox)
-                    for person in Persons:
-                        if (person.backpackBox is not None and isClose(box, person.backpackBox, 150)) or (person.backpackBox is None and isClose(box, person.box,150)):
-                            person.backpackBox = box
-                            break
                 if (classId == 1):
                     for person in Persons:
                         if isClose(box, person.box, 200):
@@ -105,7 +102,14 @@ while True:
                         Persons.append(Person(id, box))
                     match = False
             
-
+            
+            for classId, confidence, box in detectResult:
+                if (classId == 27 or classId == 31):  # backpack
+                    # print(person.backpackBox)
+                    for person in Persons:
+                        if (person.backpackBox is not None and isClose(box, person.backpackBox, 150)) or (person.backpackBox is None and isClose(box, person.box,150)):
+                            person.backpackBox = box
+                            break
             
            
 
