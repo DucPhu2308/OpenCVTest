@@ -1,6 +1,6 @@
 import cv2
 import math
-thres = 0.5  # Threshold to detect object
+thres = 0.45 # Threshold to detect object
 
 cap = cv2.VideoCapture(0)
 cap.set(3, 1280)
@@ -33,10 +33,22 @@ def isClose(box1, box2, minDist):
 
 def calDistance(box1, box2):
     return math.sqrt((getCenter(box1)["x"] - getCenter(box2)["x"])**2 + (getCenter(box1)["y"] - getCenter(box2)["y"])**2)
-
+    
 def getCenter(box):
     return {"x": int(box[0] + box[2]/2), 
             "y": int(box[1] + box[3]/2)}
+
+def getStatus(p):
+    global Persons
+    if (calDistance(p.box, p.backpackBox) > 400 ):
+        for person in Persons:
+            if person != p:
+                dist = calDistance(p.box, p.backpackBox)
+                if (dist > 400 and dist < 600):
+                    return 1 #warning
+                elif (dist < 400):
+                    return 2 #alert
+    return 0 #normal
 
 Persons = []
 
@@ -58,23 +70,31 @@ while True:
                         id = Persons[-1].id + 1
                     Persons.append(Person(id, box))
         else:
-            # tim nguoi ko con ton tai
+             # tim nguoi ko con ton tai
             for person in Persons:
                 for classId, confidence, box in detectResult:
                     if (classId == 1):
-                        if isClose(box, person.box, 100):
+                        if isClose(box, person.box, 50):
                             person.box = box
                             match = True
                             break
                 if not match:
+                    print(len(Persons))
                     Persons.remove(person)
-                    match = False
+                match = False
 
             # tim nguoi moi
             for classId, confidence, box in detectResult:
+                if (classId == 27 or classId == 31):  # backpack
+                    # print(person.backpackBox)
+                    for person in Persons:
+                        if (person.backpackBox is not None and isClose(box, person.backpackBox, 150)) or (person.backpackBox is None and isClose(box, person.box,150)):
+                            person.backpackBox = box
+                            break
                 if (classId == 1):
                     for person in Persons:
-                        if isClose(box, person.box,100):
+                        if isClose(box, person.box, 200):
+                            person.box = box
                             match = True
                             break
                     if not match:
@@ -83,25 +103,38 @@ while True:
                         else:
                             id = Persons[-1].id + 1
                         Persons.append(Person(id, box))
-                        match = False
-                if (classId == 27):  # backpack
-                    for person in Persons:
-                        if (person.backpackBox is not None and isClose(box, person.backpackBox,80))or (person.backpackBox is None and isClose(box, person.box,80)):
-                            person.backpackBox = box
-                            break
+                    match = False
+            
+
+            
+           
+
+            
+                
+
+            
+            
 
     for person in Persons:
         cv2.rectangle(img, person.box, color=(0, 255, 0), thickness=2)
         cv2.circle(img, (getCenter(person.box)["x"], getCenter(person.box)["y"]), 10, color=(0, 255, 0), thickness=2)
         cv2.putText(img, "person " + str(person.id), (person.box[0]+10, person.box[1]+30),
                     cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+
         if (person.backpackBox is not None):
-            cv2.rectangle(img, person.backpackBox, color=(0, 255, 0), thickness=2)
+            if getStatus(person) == 1:
+                print("Warning!") #Thong bao
+                color = (0, 255,255) #vang
+            elif getStatus(person) == 2:
+                print("Alert!") #Thong bao
+                color = (0,0,255) #red
+            else:
+                color = (0, 255, 0)
+            cv2.rectangle(img, person.backpackBox, color=color, thickness=2)
             cv2.putText(img, "pack " + str(person.id), (person.backpackBox[0]+10, person.backpackBox[1]+30),
-                        cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+                        cv2.FONT_HERSHEY_COMPLEX, 1, color, 2)
             
-            if (calDistance(person.box, person.backpackBox)) > 200:
-                print("Alert!")
+            
 
 
 
