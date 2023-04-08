@@ -68,23 +68,30 @@ class ObjectDetector:
                         new_bag.id, new_bag.owner_id = bag.id, bag.owner_id  
                         break
 
-                for new_bag in new_bags:
+                for nb in new_bags:
                     # Find owner
-                    if new_bag.owner_id == 'None':
-                        for person in self.people:
-                            if new_bag.isClose(person):
-                                new_bag.setOwner(person.id)
-                                person.object_ids.append(new_bag.id)
+                    if nb.owner_id == 'None':
+                        for person in new_people:
+                            if nb.isClose(person):
+                                nb.setOwner(person.id)
+                                print('Object id of person before: ', person.object_ids)
+                                person.object_ids.append(nb.id)
+                                print('Object id of person afer: ', person.object_ids)
 
-                for bag in self.bags:
-                    print(bag.owner_id, end=' ')
+                    # for bag in self.bags:
+                    #     print(bag.owner_id, end=' ')
                 new_bags.append(new_bag)
         
         self.people, self.bags = new_people, new_bags
+        print('After check: ')
+        for person in self.people:
+            print(person.object_ids, end=' ')
 
     def check(self):
         for person in self.people:
             print(person.object_ids)
+            for bag in self.bags:
+                print(bag.id, end=' ')
             # Check if each person is controlling enough their belongings
             for id in person.object_ids:
                 exist = False
@@ -116,7 +123,7 @@ class ObjectDetector:
         for bag in self.bags:
             # print(bag.owner_id)
             cv2.rectangle(self.img, bag.box, color=(0, 255, 0), thickness=2)
-            cv2.putText(self.img, 'Phone ' + bag.owner_id, (bag.box[0]+10, bag.box[1]+30),
+            cv2.putText(self.img, 'Phone ' + bag.owner_id + ' ' + bag.id, (bag.box[0]+10, bag.box[1]+30),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 255), 2)
             # cv2.putText(self.img,str(round(bag.confidence*100,2)),(bag.box[0]+200,bag.box[1]+30),
             # cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
