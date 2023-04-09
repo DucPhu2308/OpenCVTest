@@ -58,7 +58,6 @@ class ObjectDetector:
 
             elif classId == CLASS_IDS["BAG"]:
                 new_bag = Bag(confidence, box)
-                # print(len(self.bags))
                 for bag in self.bags:
                     if bag.isVeryClose(box):
                         for person in self.people:
@@ -68,30 +67,24 @@ class ObjectDetector:
                         new_bag.id, new_bag.owner_id = bag.id, bag.owner_id  
                         break
 
-                for nb in new_bags:
+                for new_bag in new_bags:
                     # Find owner
-                    if nb.owner_id == 'None':
-                        for person in new_people:
-                            if nb.isClose(person):
-                                nb.setOwner(person.id)
-                                print('Object id of person before: ', person.object_ids)
-                                person.object_ids.append(nb.id)
-                                print('Object id of person afer: ', person.object_ids)
+                    if new_bag.owner_id == 'None':
+                        for person in self.people:
+                            if new_bag.isClose(person):
+                                new_bag.setOwner(person.id)
+                                person.object_ids.append(new_bag.id)
 
-                    # for bag in self.bags:
-                    #     print(bag.owner_id, end=' ')
+                for bag in self.bags:
+                    print(bag.owner_id, end=' ')
                 new_bags.append(new_bag)
         
         self.people, self.bags = new_people, new_bags
-        print('After check: ')
-        for person in self.people:
-            print(person.object_ids, end=' ')
+
 
     def check(self):
         for person in self.people:
-            print(person.object_ids)
-            for bag in self.bags:
-                print(bag.id, end=' ')
+            print(person.id + ': ', person.object_ids)
             # Check if each person is controlling enough their belongings
             for id in person.object_ids:
                 exist = False
@@ -104,29 +97,32 @@ class ObjectDetector:
                     break
                     
 
-            left_objects = person.object_ids
-            for bag in self.bags:
-                if bag.owner_id == person.id and person.calDistance(bag.box) >= 400:
-                    left_objects.remove(bag.id)
+            # left_objects = person.object_ids
+            # for bag in self.bags:
+            #     if bag.owner_id == person.id and person.calDistance(bag.box) >= 400:
+            #         left_objects.remove(bag.id)
 
-            if len(left_objects) != 0:
-                print('Left')
+            # if len(left_objects) != 0:
+            #     print('Left')
 
     def draw(self):
         for person in self.people:
-            cv2.rectangle(self.img, person.box, color=(0, 255, 0), thickness=2)
-            cv2.putText(self.img, 'Person ' + person.id, (person.box[0]+10, person.box[1]+30),
-                        cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-            # cv2.putText(self.img,str(round(person.confidence*100,2)),(person.box[0]+200,person.box[1]+30),
-            # cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
+            # if len(person.object_ids) > 0:
+                cv2.rectangle(self.img, person.box, color=(0, 255, 0), thickness=2)
+                cv2.putText(self.img, 'Person ' + person.id, (person.box[0]+10, person.box[1]+30),
+                            cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
+                # cv2.putText(self.img,str(round(person.confidence*100,2)),(person.box[0]+200,person.box[1]+30),
+                # cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
 
         for bag in self.bags:
             # print(bag.owner_id)
             cv2.rectangle(self.img, bag.box, color=(0, 255, 0), thickness=2)
-            cv2.putText(self.img, 'Phone ' + bag.owner_id + ' ' + bag.id, (bag.box[0]+10, bag.box[1]+30),
+            cv2.putText(self.img, 'Phone ' + bag.id, (bag.box[0]+10, bag.box[1]+30),
+                        cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 255), 2)
+            cv2.putText(self.img, 'Owner ' + bag.owner_id, (bag.box[0]+10, bag.box[1]+60),
                         cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 255), 2)
             # cv2.putText(self.img,str(round(bag.confidence*100,2)),(bag.box[0]+200,bag.box[1]+30),
             # cv2.FONT_HERSHEY_COMPLEX,1,(0,255,0),2)
 
         cv2.imshow('Object Detector', self.img)
-        cv2.waitKey(1)
+        
